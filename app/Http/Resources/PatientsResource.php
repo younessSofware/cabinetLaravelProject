@@ -29,7 +29,7 @@ class PatientsResource extends JsonResource
                 'updated_at'=>$this->updated_at,
 
         ],
-            'appointments' => AppointmentResource::collection($this->appointments),
+
         ];
     }
 }
