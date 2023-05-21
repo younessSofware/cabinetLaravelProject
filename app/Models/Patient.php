@@ -20,4 +20,8 @@ class Patient extends Model
         'Password',
         'Password_Confirmation'
     ];
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class);
+    }
 }

@@ -23,12 +23,6 @@ class AppointmentResource extends JsonResource
                 'created_at'=>$this->created_at,
                 'updated_at'=>$this->updated_at
             ],
-            'relationships'=>[
-                'id'=>(string)$this->patient->id,
-                'patient name'=>$this->patient->FullName,
-                'PhoneNumber'=>$this->patient->PhoneNumber,
-                'Adress'=>$this->patient->Adress
-            ],
         ];
     }
 }
