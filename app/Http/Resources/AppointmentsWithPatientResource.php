@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class AppointmentResource extends JsonResource
+class AppointmentsWithPatientResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -22,6 +22,12 @@ class AppointmentResource extends JsonResource
                 'end_time' => $this->end_time,
                 'created_at'=>$this->created_at,
                 'updated_at'=>$this->updated_at
+            ],
+            'relationships'=>[
+                'id'=>(string)$this->patient->id,
+                'patient name'=>$this->patient->FullName,
+                'PhoneNumber'=>$this->patient->PhoneNumber,
+                'Adress'=>$this->patient->Adress
             ],
         ];
     }

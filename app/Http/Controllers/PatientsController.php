@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePatientRequest;
 use App\Http\Resources\PatientsResource;
+use App\Http\Resources\PatientsWithLastAppointmentResource;
 use App\Models\Patient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +18,7 @@ class PatientsController extends Controller
      */
     public function index()
     {
-       return PatientsResource::collection(
+       return PatientsWithLastAppointmentResource::collection(
            Patient::all()
        );
 
