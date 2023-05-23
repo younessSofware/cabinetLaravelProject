@@ -11,8 +11,8 @@ class Patient extends Model
 {
     use HasApiTokens, HasFactory, Notifiable;
     protected $fillable = [
-        'FullName',
         'CIN',
+        'FullName',
         'PhoneNumber',
         'Age',
         'DateOfBirth',
@@ -20,7 +20,7 @@ class Patient extends Model
         'Password',
         'Password_Confirmation'
     ];
-    public function appointments()
+    public function appointments(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Appointment::class);
     }

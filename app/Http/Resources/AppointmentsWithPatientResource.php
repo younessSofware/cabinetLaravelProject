@@ -24,9 +24,9 @@ class AppointmentsWithPatientResource extends JsonResource
                 'updated_at'=>$this->updated_at
             ],
             'relationships'=>[
-                'id'=>(string)$this->patient->id,
+                'CIN'=>$this->patient->CIN,
                 'patient name'=>$this->patient->FullName,
-                'PhoneNumber'=>$this->patient->PhoneNumber,
+                'PhoneNumber'=>$this->patient->PhoneNuzmber,
                 'Adress'=>$this->patient->Adress
             ],
         ];
