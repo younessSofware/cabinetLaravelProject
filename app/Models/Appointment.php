@@ -10,14 +10,14 @@ class Appointment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'patient_id',
+        'patient_CIN',
         'start_time',
         'end_time',
         'reason',
     ];
 
-    public function patient()
+    public function patient(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->belongsTo(Patient::class);
+        return $this->belongsTo(Patient::class, 'patient_CIN', 'CIN');
     }
 }
