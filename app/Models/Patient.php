@@ -22,6 +22,6 @@ class Patient extends Model
     ];
     public function appointments(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(Appointment::class);
+        return $this->hasMany(Appointment::class, 'patient_CIN', 'CIN');
     }
 }
