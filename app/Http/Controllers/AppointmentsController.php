@@ -6,6 +6,8 @@ use App\Http\Requests\StoreAppointmentRequest;
 use App\Http\Resources\AppointmentResource;
 use App\Http\Resources\AppointmentsWithPatientResource;
 use App\Models\Appointment;
+
+use App\Models\Patient;
 use Illuminate\Http\Request;
 
 class AppointmentsController extends Controller
@@ -34,6 +36,7 @@ class AppointmentsController extends Controller
     public function store(StoreAppointmentRequest $request)
     {
         $request->validated($request->all());
+        $patient = Patient::where('CIN', $request->patient_CIN)->first();
 
         $availableSlots = Appointment::where(function($query) use ($request) {
             $query->whereBetween('start_time', [$request['start_time'], $request['end_time']])
@@ -49,7 +52,7 @@ class AppointmentsController extends Controller
         }
 
         $appointment = Appointment::create([
-            'patient_CIN'=>$request->patient_CIN,
+            'patient_id'=>$patient->id,
             'start_time'=>$request->start_time,
             'end_time'=>$request->end_time,
             'reason'=>$request->reason,

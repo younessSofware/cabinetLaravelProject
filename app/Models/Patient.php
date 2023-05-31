@@ -10,6 +10,7 @@ use Laravel\Sanctum\HasApiTokens;
 class Patient extends Model
 {
     use HasApiTokens, HasFactory, Notifiable;
+
     protected $fillable = [
         'CIN',
         'FullName',
@@ -18,10 +19,22 @@ class Patient extends Model
         'DateOfBirth',
         'Adress',
         'Password',
-        'Password_Confirmation'
+        'Password_Confirmation',
+        'cin_image'
     ];
-    public function appointments(): \Illuminate\Database\Eloquent\Relations\HasMany
+
+    protected $appends = ['cin_image_url'];
+
+    public function getCinImageUrlAttribute()
     {
-        return $this->hasMany(Appointment::class, 'patient_CIN', 'CIN');
+        if ($this->cin_image) {
+            return asset('storage/images/' . $this->cin_image);
+        }
+        return null;
+    }
+
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class);
     }
 }
