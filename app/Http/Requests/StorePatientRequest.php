@@ -29,7 +29,8 @@ class StorePatientRequest extends FormRequest
             'DateOfBirth' => ['required'],
             'Adress' => ['required'],
             'Password' => ['required'],
-            'Password_Confirmation' => ['required']
+            'Password_Confirmation' => ['required'],
+            'cin_image' => ['required']
         ];
     }
 }

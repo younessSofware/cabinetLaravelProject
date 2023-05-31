@@ -8,8 +8,9 @@ use App\Http\Resources\PatientsWithLastAppointmentResource;
 use App\Models\Patient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use PHPUnit\Event\Code\Test;
-use Spatie\Permission\Middlewares\RoleMiddleware;
+use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Facades\Image;
+use App\Helpers\PDFHelper;
 
 class PatientsController extends Controller
 {
@@ -18,36 +19,45 @@ class PatientsController extends Controller
      */
     public function index()
     {
-       return PatientsWithLastAppointmentResource::collection(
-           Patient::all()
-       );
-
+        return PatientsWithLastAppointmentResource::collection(Patient::all());
     }
 
+    public function generateReportPDF($patientId)
+    {
+        // Get the patient data and appointments
+        $patient = Patient::findOrFail($patientId);
+        $appointments = $patient->appointments;
+
+        // Load the HTML template
+        $html = view('patient_report', compact('patient', 'appointments'))->render();
+
+        // Generate the PDF using the helper function
+        $pdfUrl = PDFHelper::generatePDF($html, 'patient_report.pdf');
+
+        // Return the JSON response with the PDF URL
+        return response()->json([
+            'status' => 'Request was successful.',
+            'message' => null,
+            'data' => [
+                'pdf_url' => $pdfUrl,
+            ],
+        ]);
+    }
 
     public function test()
     {
         if (Auth::user()->hasRole('admin')) {
             return [
-                'message'=>'this user has role admin'
+                'message' => 'This user has role admin'
             ];
         } else {
             Auth::user()->assignRole('admin');
-            if (Auth::user()->hasRole('admin')){
+            if (Auth::user()->hasRole('admin')) {
                 return [
-                    'message'=>'this user has now role admin'
+                    'message' => 'This user now has role admin'
                 ];
             }
-
         }
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -55,46 +65,75 @@ class PatientsController extends Controller
      */
     public function store(StorePatientRequest $request)
     {
-       $request ->validated($request->all());
+        $request->validated();
 
-       $patient = Patient::create([
-           'FullName' =>$request->FullName,
-           'CIN' => $request->CIN,
-           'PhoneNumber' => $request->PhoneNumber,
-           'Age' => $request->Age,
-           'DateOfBirth' => $request->DateOfBirth,
-           'Adress' => $request->Adress,
-           'Password' => $request->Password,
-           'Password_Confirmation' => $request->Password_Confirmation,
-       ]);
+        $patient = Patient::create([
+            'FullName' => $request->FullName,
+            'CIN' => $request->CIN,
+            'PhoneNumber' => $request->PhoneNumber,
+            'Age' => $request->Age,
+            'DateOfBirth' => $request->DateOfBirth,
+            'Adress' => $request->Adress,
+            'Password' => $request->Password,
+            'Password_Confirmation' => $request->Password_Confirmation,
+        ]);
 
-       return new PatientsResource($patient);
+        if ($request->hasFile('cin_image')) {
+            $cinImage = $request->file('cin_image');
+            $imageName = time() . '.' . $cinImage->getClientOriginalExtension();
+            $imagePath = 'public/images/' . $imageName;
+            $image = Image::make($cinImage)->resize(400, 300);
+            $image->save(storage_path('app/' . $imagePath));
+
+            $patient->cin_image = $imageName;
+            $patient->save();
+        }
+
+        return new PatientsResource($patient);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Patient $patient)
+    public function show($cin)
     {
-        return new PatientsResource($patient);
-    }
+        $patient = Patient::where('CIN', $cin)->first();
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+        if ($patient) {
+            return new PatientsResource($patient);
+        } else {
+            return response()->json(['message' => 'Patient not found'], 404);
+        }
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Patient $patient)
+    public function update(Request $request, $cin)
     {
-       $patient->update($request->all());
+        $patient = Patient::where('CIN', $cin)->first();
 
-       return new PatientsResource($patient);
+        if ($patient) {
+            if ($request->hasFile('cin_image')) {
+                $cinImage = $request->file('cin_image');
+                $imageName = time() . '.' . $cinImage->getClientOriginalExtension();
+                $imagePath = 'images/' . $imageName;
+                $image = Image::make($cinImage)->resize(400, 300);
+                $image->save(storage_path('app/' . $imagePath));
+
+                // Delete the old image file if needed
+                if ($patient->cin_image) {
+                    Storage::delete('images/' . $patient->cin_image);
+                }
+
+                $patient->cin_image = $imageName;
+                $patient->save();
+            }
+
+            $patient->update($request->all());
+        }
+
+        return new PatientsResource($patient);
     }
 
     /**
@@ -102,7 +141,13 @@ class PatientsController extends Controller
      */
     public function destroy(Patient $patient)
     {
+        // Delete the patient's image file if needed
+        if ($patient->cin_image) {
+            Storage::delete('images/' . $patient->cin_image);
+        }
+
         $patient->delete();
-        return response(null,204);
+
+        return response()->json(['message' => 'Patient deleted successfully'], 204);
     }
 }

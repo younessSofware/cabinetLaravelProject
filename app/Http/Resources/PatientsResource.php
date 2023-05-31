@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class PatientsResource extends JsonResource
@@ -15,7 +16,7 @@ class PatientsResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'=>(string)$this->id,
+            'id'=>$this->id,
             'attributes'=>[
                 'FullName' =>$this->FullName,
                 'CIN' => $this->CIN,
@@ -27,8 +28,9 @@ class PatientsResource extends JsonResource
                 'Password_Confirmation' => $this->Password_Confirmation,
                 'created_at'=>$this->created_at,
                 'updated_at'=>$this->updated_at,
+                'cin_image' => $this->cin_image ? asset('storage/images/' . $this->cin_image) : null,
 
-        ],
+            ],
 
         ];
     }

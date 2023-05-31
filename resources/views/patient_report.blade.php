@@ -25,7 +25,7 @@
 <h1>Patient Report</h1>
 <h2>Patient Information</h2>
 <p><strong>Name:</strong> {{ $patient->FullName }}</p>
-<p><strong>Email:</strong> {{ $patient->email }}</p>
+<p><strong>Email:</strong> {{ $patient->Adress }}</p>
 <p><strong>Phone:</strong> {{ $patient->PhoneNumber }}</p>
 
 <h2>Appointments</h2>
@@ -33,8 +33,8 @@
     <thead>
     <tr>
         <th>Date</th>
-        <th>Time</th>
-        <th>Doctor</th>
+        <th>Start</th>
+        <th>End</th>
         <th>Reason</th>
     </tr>
     </thead>
@@ -42,8 +42,8 @@
     @foreach ($patient->appointments as $appointment)
         <tr>
             <td>{{ $appointment->date }}</td>
-            <td>{{ $appointment->time }}</td>
-            <td>{{ $appointment->doctor->name }}</td>
+            <td>{{ $appointment->start_time }}</td>
+            <td>{{ $appointment->end_time }}</td>
             <td>{{ $appointment->reason }}</td>
         </tr>
     @endforeach

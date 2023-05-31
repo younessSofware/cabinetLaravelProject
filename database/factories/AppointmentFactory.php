@@ -18,7 +18,7 @@ class AppointmentFactory extends Factory
     public function definition(): array
     {
              return [
-                 'patient_CIN' => Patient::all()->random()->CIN,
+                 'patient_id' => Patient::all()->random()->id,
                  'start_time' => $this->faker->dateTimeBetween('now', '+1 week'),
                  'end_time' => $this->faker->dateTimeBetween('+1 hour', '+1 week'),
                  'reason' => $this->faker->sentence(),
