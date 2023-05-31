@@ -14,6 +14,7 @@ class Appointment extends Model
         'start_time',
         'end_time',
         'reason',
+        'status'
     ];
 
     public function patient(): \Illuminate\Database\Eloquent\Relations\BelongsTo

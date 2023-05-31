@@ -22,5 +22,8 @@ Route::group(['middleware' => ['auth:sanctum', 'role:admin']], function () {
     Route::resource('/patients', \App\Http\Controllers\PatientsController::class);
     Route::resource('/secretary', \App\Http\Controllers\SecretaryController::class);
     Route::get('/patient/{id}/report-pdf', [Controllers\PatientsController::class, 'generateReportPDF']);
+    Route::patch('/appointments/{appointment}/approve', [Controllers\AppointmentsController::class, 'approve']);
+
+
 
 });

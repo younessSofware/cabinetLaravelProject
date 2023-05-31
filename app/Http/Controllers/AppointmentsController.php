@@ -6,7 +6,6 @@ use App\Http\Requests\StoreAppointmentRequest;
 use App\Http\Resources\AppointmentResource;
 use App\Http\Resources\AppointmentsWithPatientResource;
 use App\Models\Appointment;
-
 use App\Models\Patient;
 use Illuminate\Http\Request;
 
@@ -78,6 +77,13 @@ class AppointmentsController extends Controller
 
         return new AppointmentResource($appointment);
     }
+    public function approve(Appointment $appointment)
+    {
+        $appointment->update(['status' => 'approved']);
+
+        return new AppointmentResource($appointment);
+    }
+
 
     /**
      * Remove the specified resource from storage.
