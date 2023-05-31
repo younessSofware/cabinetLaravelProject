@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Facades\Image;
+use App\Helpers\PDFHelper;
 
 class PatientsController extends Controller
 {
@@ -19,6 +20,28 @@ class PatientsController extends Controller
     public function index()
     {
         return PatientsWithLastAppointmentResource::collection(Patient::all());
+    }
+
+    public function generateReportPDF($patientId)
+    {
+        // Get the patient data and appointments
+        $patient = Patient::findOrFail($patientId);
+        $appointments = $patient->appointments;
+
+        // Load the HTML template
+        $html = view('patient_report', compact('patient', 'appointments'))->render();
+
+        // Generate the PDF using the helper function
+        $pdfUrl = PDFHelper::generatePDF($html, 'patient_report.pdf');
+
+        // Return the JSON response with the PDF URL
+        return response()->json([
+            'status' => 'Request was successful.',
+            'message' => null,
+            'data' => [
+                'pdf_url' => $pdfUrl,
+            ],
+        ]);
     }
 
     public function test()
