@@ -28,7 +28,7 @@ class Patient extends Model
     public function getCinImageUrlAttribute()
     {
         if ($this->cin_image) {
-            return asset('storage/images/' . $this->cin_image);
+            return asset('storage/' . $this->cin_image);
         }
         return null;
     }

@@ -11,29 +11,41 @@ use Spatie\Permission\Models\Role;
 
 class SecretaryController extends Controller
 {
-    public function index()
+    public function index(Request $req)
     {
+        $query =  $req->cin;
+        $skip = $req->skip;
+        $take = $req->take;
         // Retrieve all users with the secretary role
-        $secretaries = User::role('secretary')->get();
+        $userQuery = User::role('secretary');
+
+        if (!empty($query)) {
+            $userQuery->where('cin', 'like', $query . '%');
+        }
+
 
         return response()->json([
-            'secretaries' => $secretaries,
+            'data' => $userQuery->skip($skip)->take($take)->get(),
+            'total' => $userQuery->count()
         ]);
     }
 
-    public function store(StoreUserRequest $request)
+    public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string',
             'email' => 'required|email|unique:users',
-            'password' => 'required|string|min:8',
+            'cin' => 'required|string|unique:users',
+            'Password' => 'required|string|min:8',
+            'Password_Confirmation' => 'required|string|min:8',
         ]);
 
         // Create the user
         $user = User::create([
             'name' => $request->input('name'),
             'email' => $request->input('email'),
-            'password' => bcrypt($request->input('password')),
+            'cin' => $request->input('cin'),
+            'password' => $request->Password,
         ]);
 
         // Assign the secretary role to the user
@@ -47,6 +59,7 @@ class SecretaryController extends Controller
                 'user' => [
                     'name' => $user->name,
                     'email' => $user->email,
+                    'cin' => $user->cin,
                     'updated_at' => $user->updated_at,
                     'created_at' => $user->created_at,
                     'id' => $user->id,
@@ -57,8 +70,9 @@ class SecretaryController extends Controller
         ]);
     }
 
-    public function update(Request $request, User $secretary)
+    public function update(Request $request, $id)
     {
+        $secretary = User::find($id);
         $request->validate([
             'name' => 'required|string',
             'email' => [
@@ -72,6 +86,7 @@ class SecretaryController extends Controller
         $secretary->update([
             'name' => $request->input('name'),
             'email' => $request->input('email'),
+            'cin' => $request->input('cin'),
             'password' => $request->input('password') ? bcrypt($request->input('password')) : $secretary->password,
         ]);
 
@@ -87,6 +102,7 @@ class SecretaryController extends Controller
                     'updated_at' => $secretary->updated_at,
                     'created_at' => $secretary->created_at,
                     'id' => $secretary->id,
+                    'cin' => $secretary->cin,
                 ],
                 'role' => $secretaryRole->name,
                 'token' => $secretary->createToken('API Token')->plainTextToken,
@@ -94,10 +110,11 @@ class SecretaryController extends Controller
         ]);
     }
 
-    public function destroy(User $secretary)
+    public function destroy($id)
     {
-        $secretary->delete();
 
+        $sec = User::find($id);
+        $sec->delete();
         return response()->json([
             'message' => 'Secretary deleted successfully.',
         ]);

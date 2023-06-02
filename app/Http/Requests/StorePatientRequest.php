@@ -23,7 +23,7 @@ class StorePatientRequest extends FormRequest
     {
         return [
             'FullName' => ['required','max:255'],
-            'CIN' => ['required'],
+            'CIN' => ['required', 'unique:patients'],
             'PhoneNumber' => ['required'],
             'Age' => ['required'],
             'DateOfBirth' => ['required'],

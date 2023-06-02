@@ -17,9 +17,22 @@ class PatientsController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $req)
     {
-        return PatientsWithLastAppointmentResource::collection(Patient::all());
+        $query =  $req->cin;
+        $skip = $req->skip;
+        $take = $req->take;
+        // Retrieve all users with the secretary role
+
+        if (!empty($query)) {
+            $pt = Patient::where('CIN', 'like', $query . '%');
+            return ['data' => 
+            PatientsWithLastAppointmentResource::collection($pt->skip($skip)->take($take)->get()),
+            'total' => $pt->count()];
+        }
+        return ['data' => 
+        PatientsWithLastAppointmentResource::collection(Patient::skip($skip)->take($take)->get()),
+        'total' => Patient::count()];;
     }
 
     public function generateReportPDF($patientId)
@@ -65,6 +78,7 @@ class PatientsController extends Controller
      */
     public function store(StorePatientRequest $request)
     {
+
         $request->validated();
 
         $patient = Patient::create([
@@ -79,13 +93,7 @@ class PatientsController extends Controller
         ]);
 
         if ($request->hasFile('cin_image')) {
-            $cinImage = $request->file('cin_image');
-            $imageName = time() . '.' . $cinImage->getClientOriginalExtension();
-            $imagePath = 'public/images/' . $imageName;
-            $image = Image::make($cinImage)->resize(400, 300);
-            $image->save(storage_path('app/' . $imagePath));
-
-            $patient->cin_image = $imageName;
+            $patient->cin_image = $request->cin_image->store('images','public');
             $patient->save();
         }
 
@@ -95,15 +103,20 @@ class PatientsController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($cin)
+    public function show($id)
     {
-        $patient = Patient::where('CIN', $cin)->first();
+        $patient = Patient::with('appointments')->find($id);
 
         if ($patient) {
             return new PatientsResource($patient);
         } else {
             return response()->json(['message' => 'Patient not found'], 404);
         }
+    }
+
+    public function modify(Request $request, $cin)
+    {
+        return $this->update($request, $cin);
     }
 
     /**
@@ -114,23 +127,15 @@ class PatientsController extends Controller
         $patient = Patient::where('CIN', $cin)->first();
 
         if ($patient) {
-            if ($request->hasFile('cin_image')) {
-                $cinImage = $request->file('cin_image');
-                $imageName = time() . '.' . $cinImage->getClientOriginalExtension();
-                $imagePath = 'images/' . $imageName;
-                $image = Image::make($cinImage)->resize(400, 300);
-                $image->save(storage_path('app/' . $imagePath));
-
-                // Delete the old image file if needed
-                if ($patient->cin_image) {
-                    Storage::delete('images/' . $patient->cin_image);
-                }
-
-                $patient->cin_image = $imageName;
-                $patient->save();
-            }
 
             $patient->update($request->all());
+            
+            if ($request->hasFile('cin_image')) {
+                Storage::delete('images/' . $patient->cin_image);
+                // Delete the old image file if needed
+                $patient->cin_image = $request->cin_image->store('images','public');
+                $patient->save();
+            }
         }
 
         return new PatientsResource($patient);
@@ -139,8 +144,9 @@ class PatientsController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Patient $patient)
+    public function destroy($id)
     {
+        $patient = Patient::where('id', $id)->first();
         // Delete the patient's image file if needed
         if ($patient->cin_image) {
             Storage::delete('images/' . $patient->cin_image);

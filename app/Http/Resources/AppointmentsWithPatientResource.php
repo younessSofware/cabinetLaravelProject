@@ -26,6 +26,7 @@ class AppointmentsWithPatientResource extends JsonResource
             ],
             'relationships'=>[
                 'CIN'=>$this->patient->CIN,
+                'id'=>$this->patient->id,
                 'patient name'=>$this->patient->FullName,
                 'PhoneNumber'=>$this->patient->PhoneNuzmber,
                 'Adress'=>$this->patient->Adress

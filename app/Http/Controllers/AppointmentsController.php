@@ -12,9 +12,15 @@ use Illuminate\Http\Request;
 class AppointmentsController extends Controller
 {
 
-    public function index()
+    public function index(Request $req)
     {
-        $appointments = Appointment::with('patient')->get();
+        $cinSearchQuery = $req->cinSearchQuery;
+        if(!empty($cinSearchQuery)){
+            $appointments = Appointment::with('patient')
+            ->whereHas('patient', function ($query) use ($cinSearchQuery){
+            $query->where('cin', 'like', $cinSearchQuery.'%');
+        })->get();
+        }else $appointments = Appointment::with('patient')->get();
         $appointmentsWithPatient = AppointmentsWithPatientResource::collection($appointments);
 
         return $appointmentsWithPatient;
@@ -55,8 +61,27 @@ class AppointmentsController extends Controller
             'start_time'=>$request->start_time,
             'end_time'=>$request->end_time,
             'reason'=>$request->reason,
+            'status' => 'waiting to pass'
         ]);
         return new AppointmentResource($appointment);
+    }
+
+
+    public function passedAppointements(Request $req){
+        $cinSearchQuery = $req->cinSearchQuery;
+        if(!empty($cinSearchQuery)){
+            $appointments = Appointment::
+            where('status', 'passed')->
+            with('patient')
+            ->whereHas('patient', function ($query) use ($cinSearchQuery){
+            $query->where('cin', 'like', $cinSearchQuery.'%');
+        })->get();
+        }else $appointments = Appointment::
+            where('status', 'passed')->
+            with('patient')->get();
+        $appointmentsWithPatient = AppointmentsWithPatientResource::collection($appointments);
+
+        return $appointmentsWithPatient;
     }
 
 
@@ -77,9 +102,9 @@ class AppointmentsController extends Controller
 
         return new AppointmentResource($appointment);
     }
-    public function approve(Appointment $appointment)
+    public function changeStatus(Appointment $appointment, Request $request )
     {
-        $appointment->update(['status' => 'approved']);
+        $appointment->update(['status' => $request->currentStatus]);
 
         return new AppointmentResource($appointment);
     }

@@ -24,12 +24,11 @@ class PatientsResource extends JsonResource
                 'Age' => $this->Age,
                 'DateOfBirth' => $this->DateOfBirth,
                 'Adress' => $this->Adress,
-                'Password' => $this->Password,
-                'Password_Confirmation' => $this->Password_Confirmation,
                 'created_at'=>$this->created_at,
                 'updated_at'=>$this->updated_at,
-                'cin_image' => $this->cin_image ? asset('storage/images/' . $this->cin_image) : null,
-
+                'cin_image' => $this->cin_image ? asset('storage/' . $this->cin_image) : null,
+                'appointement' => ['attributes' =>  $this->appointments()->get()]
+               
             ],
 
         ];
