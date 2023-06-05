@@ -22,6 +22,7 @@ class StorePatientRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'Email' => ['required','max:255', 'unique:users'],
             'FullName' => ['required','max:255'],
             'CIN' => ['required', 'unique:patients'],
             'PhoneNumber' => ['required'],

@@ -7,13 +7,27 @@ use App\Http\Resources\AppointmentResource;
 use App\Http\Resources\AppointmentsWithPatientResource;
 use App\Models\Appointment;
 use App\Models\Patient;
+use DateTime;
 use Illuminate\Http\Request;
 
 class AppointmentsController extends Controller
 {
 
+    public function getAppointmentEnAttente(Request $req){
+        return [
+            'data' => Appointment::where('status', 'waiting to accept')->count()
+        ];
+    }
+
     public function index(Request $req)
     {
+        $dateTime = new DateTime();
+        $stringDate = $dateTime->format('Y-m-d H:i:s');
+        Appointment::where('end_time', '<', $stringDate)
+        ->update([
+            'status' => 'passed',
+        ]);
+
         $cinSearchQuery = $req->cinSearchQuery;
         if(!empty($cinSearchQuery)){
             $appointments = Appointment::with('patient')
@@ -25,6 +39,7 @@ class AppointmentsController extends Controller
 
         return $appointmentsWithPatient;
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -55,13 +70,12 @@ class AppointmentsController extends Controller
         if ($availableSlots > 0) {
             return response()->json(['error' => 'There is already an appointment scheduled during this time.'], 409);
         }
-
         $appointment = Appointment::create([
             'patient_id'=>$patient->id,
             'start_time'=>$request->start_time,
             'end_time'=>$request->end_time,
             'reason'=>$request->reason,
-            'status' => 'waiting to pass'
+            'status' => auth()->user()->roles->first()->name == 'user' ? 'waiting to accept' : 'waiting to pass'
         ]);
         return new AppointmentResource($appointment);
     }

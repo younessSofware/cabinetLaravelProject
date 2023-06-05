@@ -51,13 +51,14 @@ class AuthController extends Controller
 
     public function login(LoginUserRequest $request)
     {
+
         $request->validated($request->only(['email', 'password']));
 
         if(!Auth::attempt($request->only(['email', 'password']))) {
             return $this->error('', 'Credentials do not match', 401);
         }
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::with('patient')->where('email', $request->email)->first();
         $role = $user->roles->first();
         return $this->success([
             'user' => [
@@ -66,6 +67,7 @@ class AuthController extends Controller
                 'updated_at' => $user->updated_at,
                 'created_at' => $user->created_at,
                 'id' => $user->id,
+                'patient' => $user->patient
             ],
             'role'=>$role->name,
             'token' => $user->createToken('API Token')->plainTextToken

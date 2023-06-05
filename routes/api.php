@@ -15,10 +15,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 // Public routes
 Route::post('/login', [\App\Http\Controllers\AuthController::class, 'login']);
-Route::post('/register', [\App\Http\Controllers\AuthController::class, 'register']);
-
+// Route::post('/register', [\App\Http\Controllers\AuthController::class, 'register']);
+Route::post('/registerPatient', [\App\Http\Controllers\PatientsController::class, 'registerPatient']);
 // Protected routes
-Route::group(['middleware' => ['auth:sanctum', 'role:admin']], function () {
+Route::group(['middleware' => ['auth:sanctum', 'role:admin|user']], function () {
     Route::get('/statistics', function(){
         return response()->json([
             'status' => 'Request was successful.',
@@ -31,6 +31,8 @@ Route::group(['middleware' => ['auth:sanctum', 'role:admin']], function () {
             ],
         ]);       
     });
+
+    Route::get('/getAppointmentEnAttente', [\App\Http\Controllers\AppointmentsController::class, 'getAppointmentEnAttente']);
     Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'logout']);
     Route::get('/test', [\App\Http\Controllers\PatientsController::class, 'test']);
     Route::resource('/appointments', \App\Http\Controllers\AppointmentsController::class);

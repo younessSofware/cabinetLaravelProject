@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Facades\Image;
 use App\Helpers\PDFHelper;
+use App\Models\Appointment;
+use App\Models\User;
+use Spatie\Permission\Models\Role;
+
+use DateTime;
+use Illuminate\Support\Facades\Hash;
 
 class PatientsController extends Controller
 {
@@ -57,30 +63,35 @@ class PatientsController extends Controller
         ]);
     }
 
-    public function test()
-    {
-        if (Auth::user()->hasRole('admin')) {
-            return [
-                'message' => 'This user has role admin'
-            ];
-        } else {
-            Auth::user()->assignRole('admin');
-            if (Auth::user()->hasRole('admin')) {
-                return [
-                    'message' => 'This user now has role admin'
-                ];
-            }
-        }
-    }
+    // public function test()
+    // {
+    //     if (Auth::user()->hasRole('admin')) {
+    //         return [
+    //             'message' => 'This user has role admin'
+    //         ];
+    //     } else {
+    //         Auth::user()->assignRole('admin');
+    //         if (Auth::user()->hasRole('admin')) {
+    //             return [
+    //                 'message' => 'This user now has role admin'
+    //             ];
+    //         }
+    //     }
+    // }
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(StorePatientRequest $request)
     {
-
         $request->validated();
-
+        $user = User::create([
+            'name' => $request->FullName,
+            'email' => $request->Email,
+            'password' => Hash::make($request->Password),
+        ]);
+        $defaultRole = Role::where('name', 'user')->first();
+        $user->assignRole($defaultRole);
         $patient = Patient::create([
             'FullName' => $request->FullName,
             'CIN' => $request->CIN,
@@ -88,10 +99,63 @@ class PatientsController extends Controller
             'Age' => $request->Age,
             'DateOfBirth' => $request->DateOfBirth,
             'Adress' => $request->Adress,
-            'Password' => $request->Password,
-            'Password_Confirmation' => $request->Password_Confirmation,
+        ]);
+        $patient->user_id = $user->id;
+        if ($request->hasFile('cin_image')) {
+            $patient->cin_image = $request->cin_image->store('images','public');
+            $patient->save();
+        }
+
+        return new PatientsResource($patient);
+    }
+
+
+
+    public function registerPatient(Request $request)
+    {
+
+
+        $request->validate([
+            'name' => 'required|string',
+            'email' => 'required|email|unique:users',
+            'Password' => 'required|min:8|required_with:Password_Confirmation|same:Password_Confirmation',
+            'DateOfBirth' => 'required',
+            'phoneNumber' => 'required|string',
+            'Password_Confirmation' => 'required|min:8',
         ]);
 
+        if($request->step ==  1){
+            return response()->json(['message' => 'Continue'], 200);
+        }else{
+            $request->validate([
+                'age' => 'required|numeric',
+                'Adress' => 'required|string',
+                'cin' => 'required|string|unique:patients',
+                'cin_image' => 'required',
+            ]);
+        }
+
+
+
+
+        // $request->validated();
+        $user = User::create([
+            'name' => $request->FullName,
+            'email' => $request->email,
+            'password' => Hash::make($request->Password),
+        ]);
+        $defaultRole = Role::where('name', 'user')->first();
+        $user->assignRole($defaultRole);
+
+        $patient = Patient::create([
+            'FullName' => $request->FullName,
+            'CIN' => $request->cin,
+            'PhoneNumber' => $request->phoneNumber,
+            'Age' => $request->age,
+            'DateOfBirth' => $request->DateOfBirth,
+            'Adress' => $request->Adress,
+        ]);
+        $patient->user_id = $user->id;
         if ($request->hasFile('cin_image')) {
             $patient->cin_image = $request->cin_image->store('images','public');
             $patient->save();
@@ -105,6 +169,12 @@ class PatientsController extends Controller
      */
     public function show($id)
     {
+        $dateTime = new DateTime();
+        $stringDate = $dateTime->format('Y-m-d H:i:s');
+        Appointment::where('end_time', '<', $stringDate)
+        ->update([
+            'status' => 'passed',
+        ]);
         $patient = Patient::with('appointments')->find($id);
 
         if ($patient) {
